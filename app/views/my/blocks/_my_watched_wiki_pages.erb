@@ -1,0 +1,27 @@
+<%
+  entries = Watcher.
+    select("#{Watcher.table_name}.*, " +
+           "#{WikiPage.table_name}.title, " +
+           "#{Project.table_name}.id as project_id, " +
+           "#{Project.table_name}.name, " +
+           "#{WikiContent.table_name}.updated_on, " +
+           "#{User.table_name}.firstname as updated_by_firstname, " +
+           "#{User.table_name}.lastname as updated_by_lastname").
+    joins("JOIN #{WikiPage.table_name} ON #{WikiPage.table_name}.id = #{Watcher.table_name}.watchable_id and #{Watcher.table_name}.watchable_type = 'WikiPage' " +
+          "JOIN #{WikiContent.table_name} ON #{WikiContent.table_name}.page_id = #{WikiPage.table_name}.id " +
+          "JOIN #{User.table_name} ON #{User.table_name}.id = #{WikiContent.table_name}.author_id " +
+          "JOIN #{Wiki.table_name} ON #{Wiki.table_name}.id = #{WikiPage.table_name}.wiki_id " +
+          "JOIN #{Project.table_name} ON #{Project.table_name}.id = #{Wiki.table_name}.project_id").
+    where(:user_id => User.current.id).
+    to_a
+%>
+<h3><%= l(:my_watched_wiki_pages) %></h3>
+<% if entries.any? %>
+  <% entries.each do |entry| -%>
+    <%= debug entry %>
+    <%= link_to(h(WikiPage.pretty_title(entry.title)), {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :id => entry.title, :version => nil},
+    :title => (entry.updated_on ? l(:label_updated_time, distance_of_time_in_words(Time.now, entry.updated_on)) : nil)) %>
+  <% end %>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
