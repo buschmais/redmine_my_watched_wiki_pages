@@ -3,25 +3,39 @@
     select("#{Watcher.table_name}.*, " +
            "#{WikiPage.table_name}.title, " +
            "#{Project.table_name}.id as project_id, " +
-           "#{Project.table_name}.name, " +
+           "#{Project.table_name}.name as project, " +
            "#{WikiContent.table_name}.updated_on, " +
-           "#{User.table_name}.firstname as updated_by_firstname, " +
-           "#{User.table_name}.lastname as updated_by_lastname").
+           "#{User.table_name}.id as user_id").
     joins("JOIN #{WikiPage.table_name} ON #{WikiPage.table_name}.id = #{Watcher.table_name}.watchable_id and #{Watcher.table_name}.watchable_type = 'WikiPage' " +
           "JOIN #{WikiContent.table_name} ON #{WikiContent.table_name}.page_id = #{WikiPage.table_name}.id " +
           "JOIN #{User.table_name} ON #{User.table_name}.id = #{WikiContent.table_name}.author_id " +
           "JOIN #{Wiki.table_name} ON #{Wiki.table_name}.id = #{WikiPage.table_name}.wiki_id " +
           "JOIN #{Project.table_name} ON #{Project.table_name}.id = #{Wiki.table_name}.project_id").
     where(:user_id => User.current.id).
+    order("#{Project.table_name}.name asc, #{WikiPage.table_name}.title asc").
     to_a
+    users_by_id = entries.map{ |e| e.user_id }.uniq.map{ |i| User.find_by_id(i) }.map {|u| [u.id, u] }.to_h
 %>
 <h3><%= l(:my_watched_wiki_pages) %></h3>
 <% if entries.any? %>
+  <table class="list">
+  <thead><tr>
+  <th><%= l(:label_project) %></th>
+  <th><%= l(:label_wiki_page) %></th>
+  <th><%= l(:label_last_change) %></th>
+  <th></th>
+  </tr></thead>
+<tbody>
+<tbody>
   <% entries.each do |entry| -%>
-    <%= debug entry %>
-    <%= link_to(h(WikiPage.pretty_title(entry.title)), {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :id => entry.title, :version => nil},
-    :title => (entry.updated_on ? l(:label_updated_time, distance_of_time_in_words(Time.now, entry.updated_on)) : nil)) %>
+    <tr>
+    <td class="name"><%= link_to(entry.project, {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :version => nil}) %></td>
+    <td class="name"><%= link_to(h(WikiPage.pretty_title(entry.title)), {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :id => entry.title, :version => nil}) %></td>
+    <td><%= entry.updated_on ? l(:label_updated_time_by, :author => link_to_user(users_by_id[entry.user_id]), :age => content_tag('span', distance_of_time_in_words(Time.now, entry.updated_on), :title => format_time(entry.updated_on))).html_safe : "" %></td>
+    </tr>
   <% end %>
+</tbody>
+</table>
 <% else %>
   <p class="nodata"><%= l(:label_no_data) %></p>
 <% end %>
