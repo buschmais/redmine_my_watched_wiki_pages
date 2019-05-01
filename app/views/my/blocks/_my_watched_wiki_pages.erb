@@ -11,7 +11,7 @@
           "JOIN #{User.table_name} ON #{User.table_name}.id = #{WikiContent.table_name}.author_id " +
           "JOIN #{Wiki.table_name} ON #{Wiki.table_name}.id = #{WikiPage.table_name}.wiki_id " +
           "JOIN #{Project.table_name} ON #{Project.table_name}.id = #{Wiki.table_name}.project_id").
-    where(:user_id => User.current.id).
+    where("#{Watcher.table_name}.user_id = ? AND #{Project.table_name}.status = ?", User.current.id, Project::STATUS_ACTIVE).
     order("#{Project.table_name}.name asc, #{WikiPage.table_name}.title asc").
     to_a
     users_by_id = entries.map{ |e| e.user_id }.uniq.map{ |i| User.find_by_id(i) }.map {|u| [u.id, u] }.to_h
