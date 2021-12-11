@@ -31,7 +31,7 @@
     <tr>
     <td class="name"><%= link_to(entry.project, {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :version => nil}) %></td>
     <td class="name"><%= link_to(h(WikiPage.pretty_title(entry.title)), {:controller => 'wiki', :action => 'show', :project_id => entry.project_id, :id => entry.title, :version => nil}) %></td>
-    <td><%= entry.updated_on ? l(:label_updated_time_by, :author => link_to_user(users_by_id[entry.user_id]), :age => content_tag('span', distance_of_time_in_words(Time.now, entry.updated_on), :title => format_time(entry.updated_on))).html_safe : "" %></td>
+    <td class="subject"><%= entry.updated_on ? l(:label_updated_time_by, :author => link_to_user(users_by_id[entry.user_id]), :age => content_tag('span', distance_of_time_in_words(Time.now, entry.updated_on), :title => format_time(entry.updated_on))).html_safe : "" %></td>
     </tr>
   <% end %>
 </tbody>
